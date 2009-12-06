@@ -168,6 +168,7 @@ static void teensi_disconnect(struct usb_interface *interface)
 	usb_put_dev(dev->udev);
 
 	kfree (dev);
+	info ("teensi device removed.");
 }
 
 static struct usb_driver led_driver = {
@@ -191,7 +192,6 @@ static void teensi_exit (void)
 {
     usb_deregister (&led_driver);
 }
-
 
 module_init (teensi_init);
 module_exit (teensi_exit);
