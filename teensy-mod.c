@@ -18,10 +18,11 @@ MODULE_AUTHOR ("Sri Kahiro Nelson");
  */
 
 
-#define VENDOR_ID		0x16c0
-#define PRODUCT_ID		0x0480
+#define VENDOR_ID		0xafaf
+#define PRODUCT_ID		0x5678
+
 /* we hard code our teensi_endpoint address that we programmed from the firmware */
-#define TEENSI_ENDPOINT_ADDR    0x83
+#define TEENSI_ENDPOINT_ADDR    2
 
 /* set up our usb device information structure 
  * Some of this code is taken from the source of usb-skeleton.c in the 
@@ -58,7 +59,7 @@ MODULE_DEVICE_TABLE (usb, id_table);
 static void change_color (struct usb_teensi_dev *dev)
 {
 	int retval = 0;
-	unsigned int color = 0x07;
+	unsigned char color = 'r';
 	unsigned char *buffer = NULL;
 	int *sent = 0;
 
@@ -68,18 +69,28 @@ static void change_color (struct usb_teensi_dev *dev)
 		return;
 	}
 
-	if (dev->blue)
-		color = 0x1;
-	if (dev->red)
-		color = 0x0;
-	if (dev->green)
-		color = 0x2;
+	if (dev->blue) {
+		printk (KERN_INFO "sending blue!\n");
+		color = 'B';
+		dev->blue = 0; 
+	}
+	if (dev->red) {
+		printk (KERN_INFO "sending red!\n");
+		color = 'R';
+		dev->red= 0;
+	}
+	if (dev->green)  {
+		printk (KERN_INFO "sending green!\n");
+		color = 'G';
+		dev->green = 0;
+	}
 
 	retval = usb_bulk_msg (dev->udev, 
-				usb_sndbulkpipe(dev->udev,TEENSI_ENDPOINT_ADDR),
-				(void *)color, 8, sent, 0);
+				usb_sndbulkpipe(dev->udev, 2),
+				(void *)&color, 2, sent, 1000);
 	if (retval)
 		err ("failed! retval = %d\n", retval);
+
 	kfree(buffer);
 }
 
@@ -115,7 +126,7 @@ static int teensi_probe (struct usb_interface *interface, const struct usb_devic
 	struct usb_teensi_dev *dev;
 	int retval = -ENOMEM;
 
-	printk (KERN_INFO "We are probing now...");
+	printk (KERN_INFO "We are probing now...\n");
 
 	/* allocate memory for our device state and initialize it */
 	dev = kzalloc (sizeof(*dev), GFP_KERNEL);
@@ -168,7 +179,7 @@ static void teensi_disconnect(struct usb_interface *interface)
 	usb_put_dev(dev->udev);
 
 	kfree (dev);
-	info ("teensi device removed.");
+	printk (KERN_INFO "teensi device removed.");
 }
 
 static struct usb_driver led_driver = {
